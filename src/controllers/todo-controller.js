@@ -62,12 +62,17 @@ class TodoController {
             responseHandler(res, error, STATUS_CODES.BAD_REQUEST)
             return
         }
-        responseHandler(res, await todoService.deleteTodoItem(value.id))
+        const deletionStatus = await todoService.deleteTodoItem(value.id)
+        if (deletionStatus)
+            responseHandler(res, { message: 'Todo deleted' }, STATUS_CODES.OK)
+        else
+            responseHandler(res, { message: 'Todo not found' }, STATUS_CODES.NOT_FOUND)
+
     }
 
     getAllTodos = async (req, res) => {
         logger.debug('Fetching all the items')
-        responseHandler(res, await todoService.getAllItems())
+        responseHandler(res, await todoService.getAllItems(), STATUS_CODES.OK)
     }
 }
 module.exports = new TodoController()

@@ -18,7 +18,7 @@ class TodoValidator {
                     'uuidv4',
                     'uuidv5'
                 ]
-            }),
+            }).required(),
             title: joi.string().required(),
             description: joi.string().optional()
         })

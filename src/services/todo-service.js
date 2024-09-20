@@ -43,7 +43,7 @@ class TodoService {
             }
         })
         logger.debug(`todo item deletion status ${deletionStatus}`)
-
+        return deletionStatus
     }
 
     getAllItems = async (req, res) => {
