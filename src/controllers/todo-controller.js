@@ -1,7 +1,8 @@
 const { logger } = require('../../logger.js')
 const todoValidator = require('./../validators/todo-validator.js')
 const todoService = require('./../services/todo-service.js')
-
+const responseHandler = require('../utils/response-handlers.js')
+const { STATUS_CODES } = require('./../utils/consts.js')
 class TodoController {
 
     constructor() {
@@ -9,43 +10,64 @@ class TodoController {
 
     createToDoItem = async (req, res) => {
         logger.debug(`Creating todo item: ${JSON.stringify(req.body)}`)
-        const schema = todoValidator.validateToDoCreation()
+        const schema = todoValidator.createToDo()
         const { error, value } = schema.validate(req.body)
         if (error) {
             logger.error(error)
-            res.send(error.message)
+            responseHandler(res, error, STATUS_CODES.BAD_REQUEST)
             return
         }
-
-        logger.debug(JSON.stringify(value))
-        res.send(
-            {
-                id: await todoService.createTodoItem(req, res)
-            }
-        )
+        const newTodoItemId = await todoService.createTodoItem(value, res)
+        responseHandler(res, { id: newTodoItemId }, STATUS_CODES.CREATED)
     }
 
     getToDoItem = async (req, res) => {
         logger.debug(`fetching todo item ${JSON.stringify(req.query)}`)
-        res.send(
-            await todoService.getTodoItem(req.query.id)
-        )
+        const schema = todoValidator.validateTodoId()
+        const { error, value } = schema.validate(req.query)
+        if (error) {
+            logger.error(error)
+            responseHandler(res, error, STATUS_CODES.BAD_REQUEST)
+            return
+        }
+        const todoItem = await todoService.getTodoItem(value.id)
+        responseHandler(
+            res, todoItem,
+            !todoItem ? STATUS_CODES.NOT_FOUND : STATUS_CODES.OK)
     }
 
     updateToDoItem = async (req, res) => {
         logger.debug(`updating todo item ${JSON.stringify(req.body)}`)
-        await todoService.updateTodoItem(req, res)
-        res.send('Todo item updated')
+        const schema = todoValidator.updateToDo()
+        const { error, value } = schema.validate(req.body)
+        if (error) {
+            logger.error(error)
+            responseHandler(res, error, STATUS_CODES.BAD_REQUEST)
+            return
+        }
+        const updationStatus = await todoService.updateTodoItem(value, res)
+        const updateSuccessful = updationStatus[0]
+        if (updateSuccessful)
+            responseHandler(res, { 'message': 'Todo item updated' }, STATUS_CODES.OK)
+        else
+            responseHandler(res, { 'message': 'Todo item not found' }, STATUS_CODES.NOT_FOUND)
     }
 
     deleteToDoItem = async (req, res) => {
-        logger.debug(`deleting todo item ${req.query}`)
-        res.send(await todoService.deleteTodoItem(req.query.id))
+        logger.debug(`deleting todo item ${JSON.stringify(req.query)}`)
+        const schema = todoValidator.validateTodoId()
+        const { error, value } = schema.validate(req.query)
+        if (error) {
+            logger.error(error)
+            responseHandler(res, error, STATUS_CODES.BAD_REQUEST)
+            return
+        }
+        responseHandler(res, await todoService.deleteTodoItem(value.id))
     }
 
     getAllTodos = async (req, res) => {
         logger.debug('Fetching all the items')
-        res.send(await todoService.getAllItems())
+        responseHandler(res, await todoService.getAllItems())
     }
 }
 module.exports = new TodoController()

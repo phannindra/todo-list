@@ -2,11 +2,11 @@ const { logger } = require('../../logger.js')
 const { todo } = require('./../models/')
 class TodoService {
 
-    createTodoItem = async (req, res) => {
-        logger.debug('Creating a todo item', JSON.stringify(req.body))
+    createTodoItem = async (payload, res) => {
+        logger.debug('Creating a todo item', JSON.stringify(payload))
         const todoItem = await todo.create({
-            title: req.body.title,
-            description: req.body.description
+            title: payload.title,
+            description: payload.description
         })
         logger.debug('Todo item id:', JSON.stringify(todoItem.dataValues.id))
         return todoItem.dataValues.id
@@ -22,13 +22,13 @@ class TodoService {
         return todoItem
     }
 
-    updateTodoItem = async (req, res) => {
-        logger.debug('Updating todo Item', JSON.stringify(req.body))
+    updateTodoItem = async (payload, res) => {
+        logger.debug('Updating todo Item', JSON.stringify(payload))
         const todoItem = todo.update(
-            req.body,
+            payload,
             {
                 where: {
-                    id: req.body.id
+                    id: payload.id
                 }
             }
         )
